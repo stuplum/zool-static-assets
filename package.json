@@ -1,0 +1,34 @@
+{
+  "name": "zool-static-assets",
+  "version": "0.0.1",
+  "description": "Zool plugin for serving static assets supporting your style guide (ie. fonts)",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --ui bdd"
+  },
+  "keywords": [
+    "zool",
+    "static",
+    "assets"
+  ],
+  "author": "stuplum",
+  "license": "MIT",
+  "peerDependencies": {
+    "hapi": ">=10.0.0"
+  },
+  "dependencies": {
+    "boom": "^2.8.0",
+    "hoek": "^2.3.0",
+    "zool-utils": "0.2.0"
+  },
+  "devDependencies": {
+    "chai": "^3.2.0",
+    "commander": "^2.9.0",
+    "glob": "^6.0.4",
+    "mocha": "^1.17.1",
+    "rimraf": "2.5.1",
+    "sinon": "1.17.3",
+    "sinon-chai": "2.8.0",
+    "zool-test-support": "0.1.3"
+  }
+}
