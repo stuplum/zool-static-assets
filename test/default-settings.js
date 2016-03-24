@@ -1,18 +1,18 @@
 'use strict';
 
 const Hapi = require('hapi');
+const inert = require('inert');
 
-describe('zool-webpack: default settings', function () {
+describe('zool-static-assets: default settings', function () {
 
-    const temp = new Temp('zool-webpack-tests');
+    const temp = new Temp('zool-static-assets-tests');
 
     let server;
 
     temp.create({
-        'dave.js': 'console.log(\'dave woz ere\');',
-        'chaz/index.js': 'console.log(\'so woz chaz\');',
-        'no-index/not-index.js': 'console.log(\'no can haz index\');',
-        'no-compile.js': 'var broken = { some ;'
+        '_assets/dave.txt': 'dave woz ere - shared',
+        'dave/_assets/dave.txt': 'dave woz ere - component',
+        'chaz/_assets/chaz.txt': 'chaz woz ere'
     });
 
     after(function (done) {
@@ -22,77 +22,53 @@ describe('zool-webpack: default settings', function () {
 
     beforeEach(function (done) {
 
-        const wpConfig = {
-            context: temp.baseDir,
-            src: temp.location
+        const config = {
+            baseDir: temp.path,
+            url: 'assets',
+            location: '_assets'
         };
 
         server = new Hapi.Server();
         server.connection({ port: 8000 });
 
-        server.register([{ register: require('../').route, options: wpConfig }], done);
+        server.register([{ register: inert }, { register: require('../').route, options: config }], done);
     });
 
-    it('should compile a js file', function (done) {
+    it('should return a 404 when asset not found', injectGET({ url: '/assets/unknown.txt' }, function (response) {
 
-        server.inject({ method: 'GET', url: '/js/dave.js' }, function (response) {
+        expect(response.statusCode).to.be.equal(404);
+        expect(response.result).to.contain('Not Found: /assets/unknown.txt');
 
-            expect(response.statusCode).to.be.equal(200);
+    }));
 
-            expect(response.result).to.contain('// webpackBootstrap');
-            expect(response.result).to.contain('console.log(\'dave woz ere\')');
+    it('should return a static asset', injectGET({ url: '/assets/dave.txt' }, function (response) {
 
-            done();
-        });
+        expect(response.statusCode).to.be.equal(200);
+        expect(response.result).to.contain('dave woz ere - shared');
 
-    });
+    }));
 
-    it('should compile from a directory with an index file', function (done) {
+    it('should return a static asset associated with a component', injectGET({ url: '/assets/chaz.txt', headers: { referer: 'http://example.com/chaz' } }, function (response) {
 
-        server.inject({ method: 'GET', url: '/js/chaz.js' }, function (response) {
+        expect(response.statusCode).to.be.equal(200);
+        expect(response.result).to.contain('chaz woz ere');
 
-            expect(response.statusCode).to.be.equal(200);
+    }));
 
-            expect(response.result).to.contain('// webpackBootstrap');
-            expect(response.result).to.contain('console.log(\'so woz chaz\')');
+    it('should return a static asset associated with a component when requested from css', injectGET({ url: '/assets/chaz.txt', headers: { referer: 'http://example.com/chaz.css' } }, function (response) {
 
-            done();
-        });
+        expect(response.statusCode).to.be.equal(200);
+        expect(response.result).to.contain('chaz woz ere');
 
-    });
+    }));
 
-    it('should return a 404 if file not found', function (done) {
-
-        server.inject({ method: 'GET', url: '/js/unknown.js' }, function (response) {
-            expect(response.statusCode).to.be.equal(404);
-            expect(response.payload).to.be.equal('Not Found: /js/unknown.js');
-            done();
-        });
-
-    });
-
-    it('should return a 404 if no index file is found within a directory', function (done) {
-
-        server.inject({ method: 'GET', url: '/js/no-index.js' }, function (response) {
-            expect(response.statusCode).to.be.equal(404);
-            expect(response.payload).to.be.equal('Not Found: /js/no-index.js');
-            done();
-        });
-
-    });
-
-    it('should return a 500 if file does not compile', function (done) {
-
-        server.inject({ method: 'GET', url: '/js/no-compile.js' }, function (response) {
-            expect(response.statusCode).to.be.equal(500);
-
-            expect(response.payload).to.contain('Line 1: Unexpected token ;');
-            expect(response.payload).to.contain('You may need an appropriate loader to handle this file type.');
-            expect(response.payload).to.contain('| var broken = { some ;');
-
-            done();
-        });
-
-    });
+    function injectGET(serverOptions, cb) {
+        return function (done) {
+            server.inject(Object.assign({ method: 'GET' }, serverOptions), function (response) {
+                cb(response);
+                done();
+            });
+        }
+    }
 
 });
