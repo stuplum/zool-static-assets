@@ -13,7 +13,8 @@ describe('zool-static-assets: default settings', function () {
         '_assets/dave.txt': 'dave woz ere - shared',
         'dave/_assets/dave.txt': 'dave woz ere - component',
         'chaz/_assets/chaz.txt': 'chaz woz ere',
-        'nested/fred/_assets/fred.txt': 'wot about fred'
+        'nested/fred/_assets/fred.txt': 'wot about fred',
+        'aliased/ginger/_assets/ginger.txt': 'and ginger too'
     });
 
     after(function (done) {
@@ -24,9 +25,14 @@ describe('zool-static-assets: default settings', function () {
     beforeEach(function (done) {
 
         const config = {
+            debug: false,
             baseDir: temp.path,
             url: 'assets',
-            location: '_assets'
+            location: '_assets',
+            aliases: {
+                '/alias-me': '/aliased',
+                '/remove-me': ''
+            }
         };
 
         server = new Hapi.Server();
@@ -66,6 +72,28 @@ describe('zool-static-assets: default settings', function () {
 
         expect(response.statusCode).to.be.equal(200);
         expect(response.result).to.contain('chaz woz ere');
+
+    }));
+
+    it('should return a static asset when url has been aliased', injectGET({ url: '/assets/ginger.txt', headers: { referer: 'http://example.com/alias-me/ginger' } }, function (response) {
+
+        expect(response.statusCode).to.be.equal(200);
+        expect(response.result).to.contain('and ginger too');
+
+    }));
+
+    it('should return a static asset when url portion has been removed', injectGET({ url: '/assets/chaz.txt', headers: { referer: 'http://example.com/remove-me/chaz' } }, function (response) {
+
+        expect(response.statusCode).to.be.equal(200);
+        expect(response.result).to.contain('chaz woz ere');
+
+    }));
+
+
+    it('should return a static asset when url has been aliased and portion removed', injectGET({ url: '/assets/ginger.txt', headers: { referer: 'http://example.com/remove-me/alias-me/ginger' } }, function (response) {
+
+        expect(response.statusCode).to.be.equal(200);
+        expect(response.result).to.contain('and ginger too');
 
     }));
 
