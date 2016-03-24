@@ -12,7 +12,8 @@ describe('zool-static-assets: default settings', function () {
     temp.create({
         '_assets/dave.txt': 'dave woz ere - shared',
         'dave/_assets/dave.txt': 'dave woz ere - component',
-        'chaz/_assets/chaz.txt': 'chaz woz ere'
+        'chaz/_assets/chaz.txt': 'chaz woz ere',
+        'nested/fred/_assets/fred.txt': 'wot about fred'
     });
 
     after(function (done) {
@@ -52,6 +53,12 @@ describe('zool-static-assets: default settings', function () {
 
         expect(response.statusCode).to.be.equal(200);
         expect(response.result).to.contain('chaz woz ere');
+
+    }));
+    it('should return a static asset associated with a nested component', injectGET({ url: '/assets/fred.txt', headers: { referer: 'http://example.com/nested/fred' } }, function (response) {
+
+        expect(response.statusCode).to.be.equal(200);
+        expect(response.result).to.contain('wot about fred');
 
     }));
 

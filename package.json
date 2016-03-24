@@ -1,6 +1,6 @@
 {
   "name": "zool-static-assets",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Zool plugin for serving static assets supporting your style guide (ie. fonts)",
   "main": "index.js",
   "scripts": {
