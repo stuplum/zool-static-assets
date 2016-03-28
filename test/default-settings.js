@@ -38,7 +38,7 @@ describe('zool-static-assets: default settings', function () {
         server = new Hapi.Server();
         server.connection({ port: 8000 });
 
-        server.register([{ register: inert }, { register: require('../').route, options: config }], done);
+        server.register([{ register: inert }, { register: require('../'), options: config }], done);
     });
 
     it('should return a 404 when asset not found', injectGET({ url: '/assets/unknown.txt' }, function (response) {
